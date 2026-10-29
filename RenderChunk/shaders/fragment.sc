@@ -1,4 +1,4 @@
-$input v_color, v_fog, v_uv0, v_uv1, wPos, cameraDist, vNormal, flickerFactor, desatFactor, clearWeather, waterFlag, waterPlane, cloudColor
+$input v_color, v_fog, v_uv0, v_uv1, wPos, cPos, cameraDist, vNormal, flickerFactor, desatFactor, clearWeather, waterFlag, waterPlane, cloudColor
 
 #include "bgfx_shader.sh"
 
@@ -19,6 +19,7 @@ $input v_color, v_fog, v_uv0, v_uv1, wPos, cameraDist, vNormal, flickerFactor, d
 uniform vec4 FogAndDistanceControl;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 FogColor;
+uniform vec4 MinecraftCameraPosition;
 
 SAMPLER2D_AUTOREG(s_MatTexture);
 SAMPLER2D_AUTOREG(s_SeasonsTexture);
@@ -146,7 +147,7 @@ void main() {
 	 * and the specular light here. We assume the color of specular
 	 * light is always the same as the color of accumulated light. */
 
-	vec3  sNormal = normalize(cross(dFdx(wPos), dFdy(wPos)));
+	vec3  sNormal = normalize(cross(dFdx(cPos), dFdy(cPos)));
 	float wet     = wetness(clearWeather, v_uv1.y);
 	if (waterFlag > 0.5) {
 		/* Compute the specular light and the opacity of water. It is
@@ -187,7 +188,7 @@ void main() {
 	pigment.rgb *= 0.5; // Darken the base water color.
 
 	#if defined(ENABLE_CLOUD_REFLECTION)
-		vec3 skyPos = reflect(normalize(wPos), fNormal);
+		vec3 skyPos = reflect(normalize(cPos), fNormal);
 
 		/* The view-space positions in the skyplane are
 		 * 10 times bigger than the terrain one. */
@@ -203,7 +204,7 @@ void main() {
 
 			/* Calculate a fresnel effect for reflection. */
 			const float fresnel = 0.06;
-			vec3  viewDir   = -normalize(wPos);
+			vec3  viewDir   = -normalize(cPos);
 			float incident  = max(0.0, dot(viewDir, fNormal));
 			float reflCoeff = fresnel + (1.0 - fresnel) * pow(1.0 - incident, 5.0);
 
@@ -216,10 +217,10 @@ void main() {
 		}
 	#endif
 
-	diffuse.rgb  = pigment * (dirLight + undirLight);
+	diffuse.rgb = pigment * (dirLight + undirLight);
 
 	#if defined(ENABLE_SPECULAR)
-		vec4 specular = waterSpecularLight(diffuse.a, dirLight, undirLight, wPos, ViewPositionAndTime.w, fNormal);
+		vec4 specular = waterSpecularLight(diffuse.a, dirLight, undirLight, cPos, ViewPositionAndTime.w, fNormal);
 
 		diffuse.rgb += specular.rgb;
 		diffuse.a    = specular.a;
@@ -248,7 +249,7 @@ void main() {
 	#if defined(ENABLE_SPECULAR)
 		const float fresnel   = 0.04;
 		const float shininess = 2.0;
-		vec3 specular = specularLight(fresnel, shininess, dirLight, undirLight, wPos, sNormal);
+		vec3 specular = specularLight(fresnel, shininess, dirLight, undirLight, cPos, sNormal);
 
 		diffuse.rgb *= 1.0 - fresnel;
 		diffuse.rgb += specular * mix(1.0, 5.0, wet);

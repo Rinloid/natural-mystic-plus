@@ -12,6 +12,7 @@ vec4 v_fog          : COLOR2;
 centroid vec2 v_uv0 : TEXCOORD0;
 vec2 v_uv1          : TEXCOORD1;
 vec3 wPos           : wPos;
+vec3 cPos           : cPos;
 float cameraDist    : cameraDist;
 vec3 vNormal        : vNormal;
 float flickerFactor : flickerFactor;

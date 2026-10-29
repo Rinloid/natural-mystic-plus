@@ -3,7 +3,7 @@ $input a_color0, a_position, a_texcoord0, a_texcoord1
     $input i_data0, i_data1, i_data2
 #endif
 
-$output v_color, v_fog, v_uv0, v_uv1, wPos, cameraDist, vNormal, flickerFactor, desatFactor, clearWeather, waterFlag, waterPlane, cloudColor
+$output v_color, v_fog, v_uv0, v_uv1, wPos, cPos, cameraDist, vNormal, flickerFactor, desatFactor, clearWeather, waterFlag, waterPlane, cloudColor
 
 #include "bgfx_shader.sh"
 
@@ -23,6 +23,7 @@ uniform vec4 RenderChunkFogAlpha;
 uniform vec4 FogAndDistanceControl;
 uniform vec4 ViewPositionAndTime;
 uniform vec4 FogColor;
+uniform vec4 MinecraftCameraPosition;
 
 void main() {
 	#ifdef INSTANCING__ON
@@ -58,18 +59,14 @@ void main() {
 		v_color = a_color0;
 	#endif
 
-	/* THINKME: Ideally this should be the absolute position of the
-	 * vertex in the world space without getting affected by the
-	 * camera position, but there is apparently no way to reconstruct
-	 * the space from what we get from the game code.
-	 */
-	wPos = worldPos.xyz;
+	cPos = worldPos.xyz;
+	wPos = cPos + MinecraftCameraPosition.xyz;
 
 	vNormal = vec3_splat(0.0);
 	flickerFactor = 1.0;
 	#if defined(ENABLE_TORCH_FLICKER)
 		if (v_uv1.x > 0.0) {
-			flickerFactor = torchLightFlicker(worldPos.xyz, ViewPositionAndTime.w);
+			flickerFactor = torchLightFlicker(wPos.xyz, ViewPositionAndTime.w);
 		}
 	#endif
 
@@ -119,7 +116,7 @@ void main() {
 		bool grassFlag = isFoliage(a_color0, a_position.xyz);
 
 	if (grassFlag) {
-		vec3 posw = abs(a_position.xyz - 8.0);
+		vec3 posw = worldPos;
 		float wave = sin(ViewPositionAndTime.w * 3.5 + 2.0 * posw.x + 2.0 * posw.z + posw.y);
 		float amplitude = 0.015;
 		/* Reduce the amplitude if it's indoor, i.e. the sunlight
@@ -138,9 +135,8 @@ void main() {
 			/* Also reduce the amplitude depending on the sunlight
 			 * level. We do the same for wave normal in the fragment
 			 * shader. */
-			worldPos.xyz += wPosDelta * smoothstep(0.5, 1.0, v_uv1.y);
-			wPos          = worldPos.xyz;
-			gl_Position   = mul(u_viewProj, vec4(worldPos, 1.0));
+			wPos         += wPosDelta * smoothstep(0.5, 1.0, v_uv1.y);
+			gl_Position  = mul(u_viewProj, vec4(worldPos, 1.0));
 		}
 
 		/* When we know the surface normal we can do something
