@@ -116,7 +116,7 @@ void main() {
 		bool grassFlag = isFoliage(a_color0, a_position.xyz);
 
 	if (grassFlag) {
-		vec3 posw = worldPos;
+		vec3 posw = wPos;
 		float wave = sin(ViewPositionAndTime.w * 3.5 + 2.0 * posw.x + 2.0 * posw.z + posw.y);
 		float amplitude = 0.015;
 		/* Reduce the amplitude if it's indoor, i.e. the sunlight
