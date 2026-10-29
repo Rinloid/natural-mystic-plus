@@ -207,6 +207,11 @@ void main() {
 			float incident  = max(0.0, dot(viewDir, fNormal));
 			float reflCoeff = fresnel + (1.0 - fresnel) * pow(1.0 - incident, 5.0);
 
+			/* Clouds near the horizon should be blended back to the sky
+			 * color, or otherwise the planar nature of the sky plane will be
+			 * even more apparent. */
+			shadedCloud.a = mix(shadedCloud.a, 0.0, cloudDist);
+
 			pigment = mix(pigment, shadedCloud.rgb, shadedCloud.a * smoothstep(0.7, 1.0, v_uv1.y) * reflCoeff);
 		}
 	#endif

@@ -4,7 +4,7 @@
         "include_patterns": ["*"],
         "merge_source": ["../vanilla"],
         "include_search_paths": ["./Include"],
-        "exclude_patterns": ["./Include"]
+        "exclude_patterns": ["./Include", ".*", "./img"]
     },
     "profiles": {
         "windows": {
