@@ -135,7 +135,7 @@ void main() {
 			/* Also reduce the amplitude depending on the sunlight
 			 * level. We do the same for wave normal in the fragment
 			 * shader. */
-			wPos         += wPosDelta * smoothstep(0.5, 1.0, v_uv1.y);
+			worldPos    += wPosDelta * smoothstep(0.5, 1.0, v_uv1.y);
 			gl_Position  = mul(u_viewProj, vec4(worldPos, 1.0));
 		}
 
